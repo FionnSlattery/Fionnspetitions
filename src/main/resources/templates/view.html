@@ -1,10 +1,33 @@
 <!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <title>Title</title>
-</head>
+<html xmlns:th="http://www.thymeleaf.org">
+<head><title>Petition</title></head>
 <body>
+<h1 th:text="${petition.title}"></h1>
 
+<p th:text="${petition.description}"></p>
+<p>Created by: <span th:text="${petition.createdBy}"></span></p>
+
+<h2>Sign this petition</h2>
+<form th:action="@{'/petitions/' + ${petition.id} + '/sign'}"
+      th:object="${signature}"
+      method="post">
+    <label>Name:</label><br>
+    <input type="text" th:field="*{name}" required><br><br>
+
+    <label>Email:</label><br>
+    <input type="email" th:field="*{email}" required><br><br>
+
+    <button type="submit">Sign</button>
+</form>
+
+<h2>Signatures</h2>
+<ul>
+    <li th:each="s : ${petition.signatures}">
+        <span th:text="${s.name}"></span>
+        (<span th:text="${s.email}"></span>)
+    </li>
+</ul>
+
+<p><a th:href="@{/petitions}">Back to list</a></p>
 </body>
 </html>

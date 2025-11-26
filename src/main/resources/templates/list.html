@@ -1,10 +1,22 @@
 <!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <title>Title</title>
-</head>
+<html xmlns:th="http://www.thymeleaf.org">
+<head><title>All Petitions</title></head>
 <body>
+<h1>All Petitions</h1>
 
+<p>
+    <a th:href="@{/petitions/new}">Create new petition</a> |
+    <a th:href="@{/petitions/search}">Search petitions</a>
+</p>
+
+<ul>
+    <li th:each="p : ${petitions}">
+        <a th:href="@{'/petitions/' + ${p.id}}">
+            <span th:text="${p.title}"></span>
+        </a>
+        (by <span th:text="${p.createdBy}"></span>)
+        - signatures: <span th:text="${#lists.size(p.signatures)}"></span>
+    </li>
+</ul>
 </body>
 </html>
