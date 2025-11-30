@@ -3,7 +3,7 @@ pipeline {
 
     environment {
         WAR_NAME       = "Fionnspetitions.war"
-        EC2_HOST       = "16.171.129.52"          // current EC2 IP
+        EC2_HOST       = "13.61.105.96"          // current EC2 IP
         EC2_USER       = "ubuntu"
         TOMCAT_WEBAPPS = "/var/lib/tomcat10/webapps"
 
