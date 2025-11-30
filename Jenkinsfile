@@ -2,7 +2,7 @@ pipeline {
     agent any
 
     environment {
-        // This is the actual name Maven produces by default:
+        // This is the actual file Maven creates:
         // target/Fionnspetitions-0.0.1-SNAPSHOT.war
         WAR_NAME       = "Fionnspetitions-0.0.1-SNAPSHOT.war"
 
@@ -16,12 +16,14 @@ pipeline {
 
     stages {
 
-        // Checkout is handled by "Declarative: Checkout SCM" from job config.
+        // Checkout is done by Declarative: Checkout SCM (job config)
 
         stage('Build & Package (FAST)') {
             steps {
-                // -B = batch mode, -DskipTests = faster build
+                // Build WAR, skip tests to keep it fast
                 sh 'mvn -B -DskipTests clean package'
+                // Optional: show what's in target/ for debugging
+                sh 'ls -l target'
             }
         }
 
@@ -33,22 +35,20 @@ pipeline {
 
         stage('Deploy to Tomcat10') {
             steps {
-                // Get SSH key from Jenkins credentials
                 withCredentials([sshUserPrivateKey(credentialsId: env.SSH_CRED,
                                                   keyFileVariable: 'EC2_KEY')]) {
 
-                    // Use single-quoted Groovy string so Jenkins doesn’t try to interpolate EC2_KEY itself
-                    sh '''
-                    echo "Uploading WAR to EC2..."
-                    scp -i "$EC2_KEY" -o StrictHostKeyChecking=no target/'"${WAR_NAME}"' '"${EC2_USER}"'@'"${EC2_HOST}"':/tmp/'"${WAR_NAME}"'
+                    sh """
+                    echo 'Uploading WAR to EC2...'
+                    scp -i "$EC2_KEY" -o StrictHostKeyChecking=no target/${WAR_NAME} ${EC2_USER}@${EC2_HOST}:/tmp/${WAR_NAME}
 
-                    echo "Deploying WAR into Tomcat10..."
-                    ssh -i "$EC2_KEY" -o StrictHostKeyChecking=no '"${EC2_USER}"'@'"${EC2_HOST}"' <<EOF
+                    echo 'Deploying WAR into Tomcat10...'
+                    ssh -i "$EC2_KEY" -o StrictHostKeyChecking=no ${EC2_USER}@${EC2_HOST} '
                         sudo rm -rf ${TOMCAT_WEBAPPS}/Fionnspetitions*
-                        sudo mv /tmp/'"${WAR_NAME}"' ${TOMCAT_WEBAPPS}/'${WAR_NAME}'
+                        sudo mv /tmp/${WAR_NAME} ${TOMCAT_WEBAPPS}/${WAR_NAME}
                         sudo systemctl restart tomcat10
-                    EOF
-                    '''
+                    '
+                    """
                 }
             }
         }
