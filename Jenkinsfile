@@ -2,33 +2,24 @@ pipeline {
     agent any
 
     environment {
-        WAR_NAME        = "Fionnspetitions.war"
-        EC2_HOST        = "16.171.129.52"       // Your current EC2 Public IP
-        EC2_USER        = "ubuntu"
+        WAR_NAME       = "Fionnspetitions.war"
+        EC2_HOST       = "16.171.129.52"          // current EC2 IP
+        EC2_USER       = "ubuntu"
+        TOMCAT_WEBAPPS = "/var/lib/tomcat10/webapps"
 
-        // Tomcat 10 deployment directory
-        TOMCAT_WEBAPPS  = "/var/lib/tomcat10/webapps"
-
-        // Jenkins credential IDs
-        GIT_CRED        = "github-creds"
-        SSH_CRED        = "ec2-ssh-key"
+        GIT_CRED       = "github-creds"
+        SSH_CRED       = "ec2-ssh-key"
     }
 
     stages {
 
-        stage('Checkout') {
-            steps {
-                git branch: 'main',
-                    url: 'git@github.com:FionnSlattery/Fionnspetitions.git',
-                    credentialsId: env.GIT_CRED
-            }
-        }
+        // Jenkins will already do "Declarative: Checkout SCM" automatically
+        // using the repo + credentials configured in the job.
 
         stage('Build & Package (FAST)') {
             steps {
-                // -B        = batch (non-interactive)
-                // -DskipTests = do NOT run tests (faster)
-                // clean package = produces WAR in target/
+                // -B = batch mode (no prompts)
+                // -DskipTests = skip tests to keep build quick
                 sh 'mvn -B -DskipTests clean package'
             }
         }
