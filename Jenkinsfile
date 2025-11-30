@@ -13,13 +13,11 @@ pipeline {
 
     stages {
 
-        // Jenkins will already do "Declarative: Checkout SCM" automatically
-        // using the repo + credentials configured in the job.
+        // Jenkins does "Declarative: Checkout SCM" automatically using job config.
 
         stage('Build & Package (FAST)') {
             steps {
-                // -B = batch mode (no prompts)
-                // -DskipTests = skip tests to keep build quick
+                // -B = batch mode, -DskipTests = no tests (faster)
                 sh 'mvn -B -DskipTests clean package'
             }
         }
@@ -32,13 +30,16 @@ pipeline {
 
         stage('Deploy to Tomcat10') {
             steps {
-                sshagent(credentials: [env.SSH_CRED]) {
+                // Use Jenkins SSH credentials to get a key file we can use with ssh/scp
+                withCredentials([sshUserPrivateKey(credentialsId: env.SSH_CRED,
+                                                  keyFileVariable: 'EC2_KEY')]) {
+
                     sh """
                     echo 'Uploading WAR to EC2...'
-                    scp -o StrictHostKeyChecking=no target/${WAR_NAME} ${EC2_USER}@${EC2_HOST}:/tmp/${WAR_NAME}
+                    scp -i "$EC2_KEY" -o StrictHostKeyChecking=no target/${WAR_NAME} ${EC2_USER}@${EC2_HOST}:/tmp/${WAR_NAME}
 
                     echo 'Deploying WAR into Tomcat10...'
-                    ssh -o StrictHostKeyChecking=no ${EC2_USER}@${EC2_HOST} '
+                    ssh -i "$EC2_KEY" -o StrictHostKeyChecking=no ${EC2_USER}@${EC2_HOST} '
                         sudo rm -rf ${TOMCAT_WEBAPPS}/Fionnspetitions*
                         sudo mv /tmp/${WAR_NAME} ${TOMCAT_WEBAPPS}/${WAR_NAME}
                         sudo systemctl restart tomcat10
