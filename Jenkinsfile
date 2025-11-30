@@ -3,7 +3,7 @@ pipeline {
 
     environment {
         WAR_NAME        = "Fionnspetitions.war"
-        EC2_HOST        = "13.60.55.149"       // <-- your EC2 updated IP
+        EC2_HOST        = "13.53.174.137"       // <-- your EC2 updated IP
         EC2_USER        = "ubuntu"
 
         // Tomcat 10 deployment directory
